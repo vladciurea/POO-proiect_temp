@@ -4,8 +4,9 @@
 // This also works if you do not want `include/`, but some editors might not like it
 // #include "Example.h"
 
+
 int main() {
-    std::cout << "Hello, world!\n";
+    std::cout << "Hello, world salut!\n";
     Example e1;
     e1.g();
     std::array<int, 100> v{};
