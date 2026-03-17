@@ -56,7 +56,7 @@ public:
     }
 
     [[nodiscard]] const std::string& getName() const { return name; }
-    [[nodiscard]] int getProdIndex() const { return resourceProdIndex; }
+    // [[nodiscard]] int getProdIndex() const { return resourceProdIndex; }
     [[nodiscard]] int getTier() const { return resourceTier; }
     [[nodiscard]] Player* getOwner() const { return owner; }
 
@@ -176,9 +176,9 @@ public:
         return os;
     }
 
-    [[nodiscard]] int getGold() const { return goldAmount; }
-    [[nodiscard]] float getStability() const { return stability; }
-    [[nodiscard]] size_t getOwnedCount() const { return ownedCountries.size(); }
+    // [[nodiscard]] int getGold() const { return goldAmount; }
+    // [[nodiscard]] float getStability() const { return stability; }
+    // [[nodiscard]] size_t getOwnedCount() const { return ownedCountries.size(); }
 
 
     [[nodiscard]] int calculateTotalIncome() const {
@@ -251,7 +251,7 @@ public:
         }
 
         bool can = false;
-        for (Country* myc : ownedCountries) {
+        for (const Country* myc : ownedCountries) {
             if (myc->isNeighbor(&target)) {
                 can = true;
                 break;
@@ -307,7 +307,7 @@ public:
             std::cout << "Ability index invalid.\n";
             return false;
         }
-        Ability &ab = abilities[idx];
+        const Ability &ab = abilities[idx];
         if (goldAmount < ab.getGoldCost()) {
             std::cout << "Nu ai aur pentru a folosi ability-ul " << ab.getName() << "\n";
             return false;
