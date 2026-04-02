@@ -195,9 +195,9 @@ public:
 
     [[nodiscard]] const std::string& getName() const { return name; }
     [[nodiscard]] bool isActive() const { return active; }
-    [[nodiscard]] float getLoyalty() const { return loyalty; }
-    [[nodiscard]] int getSalaryCost() const { return salaryCostPerTurn; }
-    [[nodiscard]] int getHireCost() const { return hireCost; }
+    // [[nodiscard]] float getLoyalty() const { return loyalty; }
+    // [[nodiscard]] int getSalaryCost() const { return salaryCostPerTurn; }
+    // [[nodiscard]] int getHireCost() const { return hireCost; }
 
     // Angajeaza advisorul (returneaza costul dedus sau -1 daca nu se poate)
     bool hire(int& playerGold) {
