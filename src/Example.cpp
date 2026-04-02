@@ -3,9 +3,10 @@
 // This also works if you do not want `../`, but some editors might not like it
 // #include "Example.h"
 
-void Example::f() const {
-    std::cout << "private function f: " << x << "\n";
-}
+// void Example::f() const {
+//     std::cout << "private function f: " << x << "\n";
+// }
+
 
 // void Example::g() {
 //     ++y;
