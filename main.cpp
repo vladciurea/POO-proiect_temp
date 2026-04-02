@@ -5,7 +5,7 @@
 #include <algorithm>
 #include <memory>
 #include <limits>
-# include <cstdlib>   // rand
+# include <cstdlib>   // random
 
 
 class Player;
