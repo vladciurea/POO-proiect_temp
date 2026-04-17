@@ -5,8 +5,6 @@
 #include <algorithm>
 #include <memory>
 #include <limits>
-# include <cstdlib>   // random
-
 
 class Player;
 class Country;
@@ -331,7 +329,7 @@ public:
         os << "Player gold=" << p.goldAmount << " stability=" << p.stability
            << " owned=[" ;
         for (size_t i = 0; i < p.ownedCountries.size(); ++i) {
-            os << (i? ", " : "") << p.ownedCountries[i]->getName();
+            os << (i ? " | " : "") << *p.ownedCountries[i];
         }
         os << "]";
         return os;
@@ -492,142 +490,153 @@ int main() {
     Country hun("Ungaria", {}, nullptr, 4, 3);
     Country gre("Grecia", {}, nullptr, 1, 1);
 
-    rom = Country("Romania", {&bul, &hun}, nullptr, 3, 2);
-    bul = Country("Bulgaria", {&rom, &gre}, nullptr, 2, 1);
-    hun = Country("Hungary", {&rom}, nullptr, 4, 3);
-    gre = Country("Greece", {&bul}, nullptr, 1, 1);
+    int nr;
+    std::cout<<"Alege numarul de runde: ";
+    std::cin>>nr;
 
-    std::vector<Ability> abil = {
-        Ability("PeoplePleaser", "Scade pierderea stabilitatii temporar", 80, +8, true),
-        Ability("MilitaryPower", "Reduce costurile de cumparare (simulat ca bonus stabilitate)", 60, +3, true)
-    };
+    int runda = 1;
+    while (nr) {
+        std::cout<<"\n===============  Runda "<<runda<<"  ===============\n";
+        runda++;
 
-    Player player({}, 500, 90.0f, abil);
+        rom = Country("Romania", {&bul, &hun}, nullptr, 3, 2);
+        bul = Country("Bulgaria", {&rom, &gre}, nullptr, 2, 1);
+        hun = Country("Hungary", {&rom}, nullptr, 4, 3);
+        gre = Country("Greece", {&bul}, nullptr, 1, 1);
 
-    // Creare advisori
-    // Unul economic (sfatuieste spre aur), unul militar (spre cucerire)
-    Advisor econAdvisor("Mihai Viteazul", "Economic", 100, 20);
-    Advisor milAdvisor("Stefan cel Mare", "Military", 150, 30);
+        std::vector<Ability> abil = {
+            Ability("PeoplePleaser", "Scade pierderea stabilitatii temporar", 80, +8, true),
+            Ability("MilitaryPower", "Reduce costurile de cumparare (simulat ca bonus stabilitate)", 60, +3, true)
+        };
 
-    std::cout << "Start game:\n" << player << "\n";
-    std::cout << "--- Advisori disponibili:\n";
-    std::cout << econAdvisor << "\n" << milAdvisor << "\n";
-    std::cout << "--- Harta (tari):\n";
-    std::cout << rom << "\n" << bul << "\n" << hun << "\n" << gre << "\n";
+        Player player({}, 500, 90.0f, abil);
 
-    // Angajeaza automat advisorul economic la start
-    std::cout << "\n--- Angajare advisor economic la start ---\n";
-    econAdvisor.hire(player.goldRef());
-    std::cout << econAdvisor << "\n";
+        // Creare advisori
+        // Unul economic (sfatuieste spre aur), unul militar (spre cucerire)
+        Advisor econAdvisor("Mihai Viteazul", "Economic", 100, 20);
+        Advisor milAdvisor("Stefan cel Mare", "Military", 150, 30);
 
-    for (int turn = 1; turn <= 3; ++turn) {
-        std::cout << "\n====== Turn " << turn << " ======\n";
+        std::cout << "Start game:\n" << player << "\n";
+        std::cout << "--- Advisori disponibili:\n";
+        std::cout << econAdvisor << "\n" << milAdvisor << "\n";
+        std::cout << "--- Harta (tari):\n";
+        std::cout << rom << "\n" << bul << "\n" << hun << "\n" << gre << "\n";
 
-        player.collectIncome();
+        // Angajeaza automat advisorul economic la start
+        std::cout << "\n--- Angajare advisor economic la start ---\n";
+        econAdvisor.hire(player.goldRef());
+        std::cout << econAdvisor << "\n";
 
-        // Plateste salariile advisorilor activi
-        econAdvisor.paySalary(player.goldRef());
-        milAdvisor.paySalary(player.goldRef());
+        for (int turn = 1; turn <= 3; ++turn) {
+            std::cout << "\n====== Turn " << turn << " ======\n";
 
-        // Advisorul activ ofera o recomandare
-        int advisorRec = -1;
-        if (econAdvisor.isActive()) {
-            advisorRec = econAdvisor.recommend(
-                player.getGold(), player.getStability(), player.getOwnedCount());
-        } else if (milAdvisor.isActive()) {
-            advisorRec = milAdvisor.recommend(
-                player.getGold(), player.getStability(), player.getOwnedCount());
-        }
+            player.collectIncome();
 
-        std::cout << "Actiuni disponibile:\n";
-        std::cout << "  1) Cumpara o tara\n";
-        std::cout << "  2) Cucereste o tara (daca e vecina)\n";
-        std::cout << "  3) Deschide un ResourceChest (quiz)\n";
-        std::cout << "  4) Tine un discurs (alegere 1..3)\n";
-        std::cout << "  5) Foloseste o abilitate\n";
-        std::cout << "  6) Angajeaza advisorul militar (daca nu e activ)\n";
-        std::cout << "  0) Skip\n";
-        std::cout << "Alege actiunea (numar): ";
+            // Plateste salariile advisorilor activi
+            econAdvisor.paySalary(player.goldRef());
+            milAdvisor.paySalary(player.goldRef());
 
-        int action = -1;
-        if (!(std::cin >> action)) {
-            std::cin.clear();
-            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-            action = 0;
-        }
-
-        // Raporteaza la advisor daca playerul i-a urmat sau nu sfatul
-        if (advisorRec != -1) {
-            bool followed = (action == advisorRec);
-            if (econAdvisor.isActive())
-                econAdvisor.reportFollowed(followed);
-            else if (milAdvisor.isActive())
-                milAdvisor.reportFollowed(followed);
-        }
-
-        if (action == 1) {
-            std::cout << "Ce tara vrei sa cumperi? (1 Romania, 2 Bulgaria, 3 Ungaria, 4 Grecia): ";
-            int c = 0; if(!(std::cin >> c)) { std::cin.clear(); std::cin.ignore(); c = 0; }
-            Country* target = nullptr;
-            if (c == 1) target = &rom;
-            else if (c == 2) target = &bul;
-            else if (c == 3) target = &hun;
-            else if (c == 4) target = &gre;
-            if (target) player.buyCountry(*target);
-        } else if (action == 2) {
-            std::cout << "Ce tara vrei sa cuceresti? (1 Romania, 2 Bulgaria, 3 Hungary, 4 Greece): ";
-            int c = 0; if(!(std::cin >> c)) { std::cin.clear(); std::cin.ignore(); c = 0; }
-            Country* target = nullptr;
-            if (c == 1) target = &rom;
-            else if (c == 2) target = &bul;
-            else if (c == 3) target = &hun;
-            else if (c == 4) target = &gre;
-            if (target) player.conquer(*target);
-        } else if (action == 3) {
-            ResourceChest rc(
-                "Care este capitala Romaniei?",
-                {"Sofia", "Bucuresti", "Budapesta"},
-                1,
-                150,
-                3
-            );
-            int reward = rc.presentAndResolve();
-            if (reward > 0) {
-                std::cout << "Se adauga reward la aur.\n";
+            // Advisorul activ ofera o recomandare
+            int advisorRec = -1;
+            if (econAdvisor.isActive()) {
+                advisorRec = econAdvisor.recommend(
+                    player.getGold(), player.getStability(), player.getOwnedCount());
+            } else if (milAdvisor.isActive()) {
+                advisorRec = milAdvisor.recommend(
+                    player.getGold(), player.getStability(), player.getOwnedCount());
             }
-        } else if (action == 4) {
-            std::cout << "Alege tip discurs: 1=bold,2=calm,3=medium : ";
-            int ch = 0; if(!(std::cin >> ch)) { std::cin.clear(); std::cin.ignore(); ch = 0; }
-            player.giveSpeech(ch);
-        } else if (action == 5) {
-            player.listAbilities();
-            std::cout << "Alege index abilitate: ";
-            size_t idx = 0;
-            if(!(std::cin >> idx)) {
-                std::cin.clear(); std::cin.ignore();
-                idx = std::numeric_limits<size_t>::max();
+
+            std::cout << "Actiuni disponibile:\n";
+            std::cout << "  1) Cumpara o tara\n";
+            std::cout << "  2) Cucereste o tara (daca e vecina)\n";
+            std::cout << "  3) Deschide un ResourceChest (quiz)\n";
+            std::cout << "  4) Tine un discurs (alegere 1..3)\n";
+            std::cout << "  5) Foloseste o abilitate\n";
+            std::cout << "  6) Angajeaza advisorul militar (daca nu e activ)\n";
+            std::cout << "  0) Skip\n";
+            std::cout << "Alege actiunea (numar): ";
+
+            int action = -1;
+            if (!(std::cin >> action)) {
+                std::cin.clear();
+                std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+                action = 0;
             }
-            if (idx != std::numeric_limits<size_t>::max()) player.useAbility(idx);
-        } else if (action == 6) {
-            if (!milAdvisor.isActive()) {
-                milAdvisor.hire(player.goldRef());
+
+            // Raporteaza la advisor daca playerul i-a urmat sau nu sfatul
+            if (advisorRec != -1) {
+                bool followed = (action == advisorRec);
+                if (econAdvisor.isActive())
+                    econAdvisor.reportFollowed(followed);
+                else if (milAdvisor.isActive())
+                    milAdvisor.reportFollowed(followed);
+            }
+
+            if (action == 1) {
+                std::cout << "Ce tara vrei sa cumperi? (1 Romania, 2 Bulgaria, 3 Ungaria, 4 Grecia): ";
+                int c = 0; if(!(std::cin >> c)) { std::cin.clear(); std::cin.ignore(); c = 0; }
+                Country* target = nullptr;
+                if (c == 1) target = &rom;
+                else if (c == 2) target = &bul;
+                else if (c == 3) target = &hun;
+                else if (c == 4) target = &gre;
+                if (target) player.buyCountry(*target);
+            } else if (action == 2) {
+                std::cout << "Ce tara vrei sa cuceresti? (1 Romania, 2 Bulgaria, 3 Hungary, 4 Greece): ";
+                int c = 0; if(!(std::cin >> c)) { std::cin.clear(); std::cin.ignore(); c = 0; }
+                Country* target = nullptr;
+                if (c == 1) target = &rom;
+                else if (c == 2) target = &bul;
+                else if (c == 3) target = &hun;
+                else if (c == 4) target = &gre;
+                if (target) player.conquer(*target);
+            } else if (action == 3) {
+                ResourceChest rc(
+                    "Care este capitala Romaniei?",
+                    {"Sofia", "Bucuresti", "Budapesta"},
+                    1,
+                    150,
+                    3
+                );
+                int reward = rc.presentAndResolve();
+                if (reward > 0) {
+                    std::cout << "Se adauga reward la aur.\n";
+                }
+            } else if (action == 4) {
+                std::cout << "Alege tip discurs: 1=bold,2=calm,3=medium : ";
+                int ch = 0; if(!(std::cin >> ch)) { std::cin.clear(); std::cin.ignore(); ch = 0; }
+                player.giveSpeech(ch);
+            } else if (action == 5) {
+                player.listAbilities();
+                std::cout << "Alege index abilitate: ";
+                size_t idx = 0;
+                if(!(std::cin >> idx)) {
+                    std::cin.clear(); std::cin.ignore();
+                    idx = std::numeric_limits<size_t>::max();
+                }
+                if (idx != std::numeric_limits<size_t>::max()) player.useAbility(idx);
+            } else if (action == 6) {
+                if (!milAdvisor.isActive()) {
+                    milAdvisor.hire(player.goldRef());
+                } else {
+                    std::cout << "Advisorul militar este deja activ.\n";
+                }
             } else {
-                std::cout << "Advisorul militar este deja activ.\n";
+                std::cout << "Skip action.\n";
             }
-        } else {
-            std::cout << "Skip action.\n";
+
+            // Afisare stare advisori la sfarsitul turnului
+            std::cout << "--- Stare advisori:\n";
+            std::cout << "  " << econAdvisor << "\n";
+            std::cout << "  " << milAdvisor  << "\n";
+
+            std::cout << "Sfarsit turn " << turn << ". " << player << "\n";
         }
 
-        // Afisare stare advisori la sfarsitul turnului
-        std::cout << "--- Stare advisori:\n";
-        std::cout << "  " << econAdvisor << "\n";
-        std::cout << "  " << milAdvisor  << "\n";
+        std::cout << "\nFinal game state:\n" << player << "\n";
+        std::cout << "Harta finala:\n" << rom << "\n" << bul << "\n" << hun << "\n" << gre << "\n";
 
-        std::cout << "Sfarsit turn " << turn << ". " << player << "\n";
+        nr--;
     }
-
-    std::cout << "\nFinal game state:\n" << player << "\n";
-    std::cout << "Harta finala:\n" << rom << "\n" << bul << "\n" << hun << "\n" << gre << "\n";
-
     return 0;
 }
